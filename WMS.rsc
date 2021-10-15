@@ -82,17 +82,21 @@
        :set $iUrl [$urlEncoder ("http://welcome2.wifi.id/wms/$Url")];
       }
       :if (($accType = "voucher") || ($accType = "smartbisnis") || ($accType = "kampus")) do={
+       :local kUser [:pick $user 0 [:find $user "@"]];
+       :local Uid [:pick $user [:len $kUser] [:len $user]];
        :local Url [:pick $Udata [:len [:pick $Udata 0 [:find $Udata "check_login"]]] [:find $Udata "@wifi.id';"]];
        :set $iUrl [$urlEncoder ("https://welcome2.wifi.id/authnew/login/$Url@wifi.id")];
        :if ($accType = "voucher") do={
-        :set $payloads [$urlEncoder ("username=$user@spin2&password=$passwd")];
+        :if ($Uid = "@violet") do={
+         :set $payloads [$urlEncoder ("username=$user&password=$passwd")];
+        } else={
+         :set $payloads [$urlEncoder ("username=$user@spin2&password=$passwd")];
+        }
        }
        :if ($accType = "smartbisnis") do={
         :set $payloads [$urlEncoder ("username=$user@com.smartbisnis&password=$passwd")];
        }
        :if ($accType = "kampus") do={
-        :local kUser [:pick $user 0 [:find $user "@"]];
-        :local Uid [:pick $user [:len $kUser] [:len $user]];
         :set $payloads [$urlEncoder ("username=$user.vmgmt@wms.00000000.000&password=$passwd")];
         :if ($Uid = "@ut.ac.id") do={
          :set $payloads [$urlEncoder ("username=$user@com.ut&password=$passwd")];
