@@ -13,9 +13,8 @@
 # ==========================
 
 :local runMe true;
-
+:log warning ("MACGEN: $iFace current mac: " . [/interface wireless get [find name=$iFace] mac-address]);
 :while ($runMe) do={
- :log warning ("MACGEN: $iFace current mac: " . [/interface wireless get [find name=$iFace] mac-address]);
  :local randomHex ([/certificate scep-server otp generate minutes-valid=0 as-value]->"password");
  :local newMac;
  :local pos 0;
