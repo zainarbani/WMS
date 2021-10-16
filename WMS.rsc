@@ -8,13 +8,13 @@
 # =========================
 
 # metode login & akun yang didukung:
-# WMS venue = wms
-# WMS Lite venue = wmslite
+# WMS venue = venue
+# WMS Lite venue = venuelite
 # wifi.id normal/voucher/violet = voucher
 # wifi.id smartbisnis = smartbisnis
 # wifi.id kampus = kampus
-# default wms
-:local accType "wms";
+# default venue
+:local accType "venue";
 
 # username
 :local user "ganti";
