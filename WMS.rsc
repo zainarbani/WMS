@@ -71,11 +71,11 @@
     } else={
      :do {
       :local Udata ([/tool fetch url=$portalUrl output=user as-value]->"data");
-      :if (($accType = "wms") || ($accType = "wmslite")) do={
+      :if (($accType = "venue") || ($accType = "venuelite")) do={
        :local Url [:pick $Udata [:len [:pick $Udata 0 [:find $Udata "auth/"]]] [:find $Udata "&landURL"]];
        :local Uid [:pick $Udata [:len [:pick $Udata 0 [:find $Udata "wms"]]] [:find $Udata ".000"]];
        :set $payloads [$urlEncoder ("username_=$user&autologin_time=86000&username=$user.ULd9@$Uid.000&password=$passwd")];
-       :if ($accType = "wmslite") do={
+       :if ($accType = "venuelite") do={
         :local Uid [:pick $Udata [:len [:pick $Udata 0 [:find $Udata "wmslite"]]] [:find $Udata "');"]];
         :set $payloads [$urlEncoder ("username_=$user&autologin_time=86000&username=$user.ULd9@$Uid&password=$passwd")];
        }
