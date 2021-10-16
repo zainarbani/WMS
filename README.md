@@ -9,7 +9,7 @@
  - wifi.id kampus
 
 ## Requirements
- - RouterOS > v6.44
+ - <strike>RouterOS > v6.44</strike> Just keep ur fckn RouterOS updated.
 
 ## Installation
 
