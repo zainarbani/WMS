@@ -4,7 +4,7 @@
 ## Supported methods
  - WMS venue
  - WMS Lite venue
- - wifi.id normal/voucher
+ - wifi.id normal/voucher/violet
  - wifi.id smartbisnis
  - wifi.id kampus
 
