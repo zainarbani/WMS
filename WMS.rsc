@@ -10,7 +10,7 @@
 # metode login & akun yang didukung:
 # WMS venue = wms
 # WMS Lite venue = wmslite
-# wifi.id normal/voucher = voucher
+# wifi.id normal/voucher/violet = voucher
 # wifi.id smartbisnis = smartbisnis
 # wifi.id kampus = kampus
 # default wms
