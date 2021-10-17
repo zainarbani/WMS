@@ -1,6 +1,6 @@
 #!rsc by RouterOS
 # RouterOS script: Telkom WMS AIO auto login
-# version: v0.4-2021-10-3-release
+# version: v0.5-2021-10-17-release
 # authors: zainarbani
 # manual: https://github.com/zainarbani/WMS#readme
 #
@@ -27,6 +27,14 @@
 # default wlan1
 :local iFace "wlan1";
 
+# load balance usually disturb detect portal progress,
+# simply don't mess with routes, so
+# let's just disable any other WAN interfaces.
+# eg: wlan2, ether2
+# separate each value with ";"
+# just leave this if you're not use LB.
+:local listLb {"ex"; "ex"};
+
 # =========================
 
 :global urlEncoder do={
@@ -48,10 +56,13 @@
  :local iUrl;
  :delay 30;
  :if ([/interface get [/interface find name=$iFace] running]) do={
-  :if ([/ping 8.8.8.8 interval=1 count=1] = 0) do={
+  :if ([/ping 8.8.8.8 interval=1 count=1 interface=$iFace] = 0) do={
    :log warning "WMS: Internet disconnected !";
    :log warning "WMS: Starting auto login";
    :log warning ("WMS: Methods: $accType");
+   :foreach i in=$listLb do={
+    /interface disable [find where name=$i]
+   }
    /ip firewall nat disable [find where out-interface=$iFace]
    /ip dns cache flush
    /ip dhcp-client release [find interface=$iFace]
@@ -123,13 +134,13 @@
       }
      } on-error={}
      :delay 5;
-     :if ([/ping 8.8.8.8 interval=1 count=1] = 1) do={
+     :if ([/ping 8.8.8.8 interval=1 count=1 interface=$iFace] = 1) do={
       :log warning "WMS: Login success";
      } else={
       :do {
        :set $result ([/tool fetch http-method=post http-header-field=("Referer: $portalUrl, User-Agent: Mozilla/5.0") http-data=$payloads host="welcome2.wifi.id" url=$iUrl output=user as-value]->"data");
        :delay 5;
-       :if ([/ping 8.8.8.8 interval=1 count=1] = 1) do={
+       :if ([/ping 8.8.8.8 interval=1 count=1 interface=$iFace] = 1) do={
         :log warning "WMS: Login success";
        } else={:log warning "WMS: Login failed !"}
       } on-error={
@@ -138,6 +149,9 @@
      }
     }
    } else={:log warning "WMS: Internet connected"}
+   :foreach i in=$listLb do={
+    /interface enable [find where name=$i]
+   }
    /ip firewall nat enable [find where out-interface=$iFace]
   }
  } else={:log warning "WMS: WLAN disconnected !"}
