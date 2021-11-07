@@ -56,7 +56,7 @@
  :local iUrl;
  :delay 30;
  :if ([/interface get [/interface find name=$iFace] running]) do={
-  :if ([/ping 8.8.8.8 interval=1 count=1 interface=$iFace] = 0) do={
+  :if ([/ping 9.9.9.9 interval=1 count=1 interface=$iFace] = 0) do={
    :log warning "WMS: Internet disconnected !";
    :log warning "WMS: Starting auto login";
    :log warning ("WMS: Methods: $accType");
@@ -134,13 +134,13 @@
       }
      } on-error={}
      :delay 5;
-     :if ([/ping 8.8.8.8 interval=1 count=1 interface=$iFace] = 1) do={
+     :if ([/ping 9.9.9.9 interval=1 count=1 interface=$iFace] = 1) do={
       :log warning "WMS: Login success";
      } else={
       :do {
-       :set $result ([/tool fetch http-method=post http-header-field=("Referer: $portalUrl, User-Agent: Mozilla/5.0") http-data=$payloads host="welcome2.wifi.id" url=$iUrl output=user as-value]->"data");
+       :set $result ([/tool fetch http-method=post http-header-field=("Referer: $portalUrl, User-Agent: Safari/537.36") http-data=$payloads host="welcome2.wifi.id" url=$iUrl output=user as-value]->"data");
        :delay 5;
-       :if ([/ping 8.8.8.8 interval=1 count=1 interface=$iFace] = 1) do={
+       :if ([/ping 9.9.9.9 interval=1 count=1 interface=$iFace] = 1) do={
         :log warning "WMS: Login success";
        } else={:log warning "WMS: Login failed !"}
       } on-error={
