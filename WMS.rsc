@@ -116,7 +116,7 @@
       :if (($accType = "voucher") || ($accType = "smartbisnis") || ($accType = "kampus")) do={
        :local kUser [:pick $user 0 [:find $user "@"]];
        :local Uid [:pick $user [:len $kUser] [:len $user]];
-       :local Url [:pick $Udata [:len [:pick $Udata 0 [:find $Udata "check_login"]]] [:find $Udata "@wifi.id';"]];
+       :local Url [:pick $Udata [:len [:pick $Udata 0 [:find $Udata "check_login"]]] [:find $Udata "@wifi.id&load_wp='+load_time;"]];
        :set $iUrl [$urlEncoder ("https://welcome2.wifi.id/authnew/login/$Url@wifi.id")];
        :if ($accType = "voucher") do={
         :if ($Uid = "@violet") do={
