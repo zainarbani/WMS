@@ -1,6 +1,6 @@
 #!rsc by RouterOS
 # RouterOS script: Telkom WMS AIO auto login
-# version: v0.5-2021-10-17-release
+# version: v0.6-2021-11-7-release
 # authors: zainarbani
 # manual: https://github.com/zainarbani/WMS#readme
 #
@@ -35,8 +35,26 @@
 # just leave this if you're not use LB.
 :local listLb {"ex"; "ex"};
 
+# CallMeBot WhatsApp API
+# https://www.callmebot.com/blog/free-api-whatsapp-messages/
+# use CallMeBot: true = yes | flase = no, default false
+:local useCallMeBot false;
+
+# CallMeBot API key
+:local cmbApiKey "";
+
+# CallMeBot phone number
+:local cmbPhone "";
+
 # =========================
 
+
+:global sendCallMeBot do={
+ :do {
+  :local cUrl ("https://api.callmebot.com/whatsapp.php\?phone=$1&text=$3&apikey=$2");
+  /tool fetch http-header-field=("User-Agent: Safari/537.36") url=$cUrl output=none
+ } on-error={}
+}
 :global urlEncoder do={
  :local urlEncoded;
  :for i from=0 to=([:len $1] - 1) do={
@@ -60,6 +78,9 @@
    :log warning "WMS: Internet disconnected !";
    :log warning "WMS: Starting auto login";
    :log warning ("WMS: Methods: $accType");
+   :local Date [/system clock get date];
+   :local Time [/system clock get time];
+   :local Board [/system resource get board-name];
    :foreach i in=$listLb do={
     /interface disable [find where name=$i]
    }
@@ -136,12 +157,18 @@
      :delay 5;
      :if ([/ping 9.9.9.9 interval=1 count=1 interface=$iFace] = 1) do={
       :log warning "WMS: Login success";
+      :if ($useCallMeBot) do={
+       $sendCallMeBot $cmbPhone $cmbApiKey [$urlEncoder ("MikroTik $Board%0AWMS: Login success%0ATime: $Time%0ADate: $Date")];
+      }
      } else={
       :do {
        :set $result ([/tool fetch http-method=post http-header-field=("Referer: $portalUrl, User-Agent: Safari/537.36") http-data=$payloads host="welcome2.wifi.id" url=$iUrl output=user as-value]->"data");
        :delay 5;
        :if ([/ping 9.9.9.9 interval=1 count=1 interface=$iFace] = 1) do={
         :log warning "WMS: Login success";
+        :if ($useCallMeBot) do={
+         $sendCallMeBot $cmbPhone $cmbApiKey [$urlEncoder ("MikroTik $Board%0AWMS: Login success%0ATime: $Time%0ADate: $Date")];
+        }
        } else={:log warning "WMS: Login failed !"}
       } on-error={
        :log warning "WMS: Login failed !";
