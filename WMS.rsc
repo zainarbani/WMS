@@ -27,14 +27,6 @@
 # default wlan1
 :local iFace "wlan1";
 
-# load balance usually disturb detect portal progress,
-# simply don't mess with routes, so
-# let's just disable any other WAN interfaces.
-# eg: wlan2, ether2
-# separate each value with ";"
-# just leave this if you're not use LB.
-:local listLb {"ex"; "ex"};
-
 # CallMeBot WhatsApp API
 # https://www.callmebot.com/blog/free-api-whatsapp-messages/
 # use CallMeBot: true = yes | flase = no, default false
@@ -81,13 +73,21 @@
    :local Date [/system clock get date];
    :local Time [/system clock get time];
    :local Board [/system resource get board-name];
-   :foreach i in=$listLb do={
-    /interface disable [find where name=$i]
-   }
    /ip firewall nat disable [find where out-interface=$iFace]
    /ip dns cache flush
    /ip dhcp-client release [find interface=$iFace]
    :delay 10;
+   :local gw [/ip dhcp-client get [find where interface=$iFace] gateway];
+   /ip firewall address-list add list=wifiid address="welcome2.wifi.id" timeout=15s
+   /ip firewall address-list add list=detectportal address="detectportal.firefox.com" timeout=15s
+   :delay 3;
+   /ip route add gateway=$gw dst-address=9.9.9.9 comment=to-wms
+   :foreach o in={"welcome2.wifi.id"; "detectportal.firefox.com"} do={
+    :foreach p in=[/ip firewall address-list find comment=$o] do={
+     :local addr [/ip firewall address-list get $p address];
+     /ip route add gateway=$gw dst-address=$addr comment=to-wms
+    }
+   }
    :do {
     :set $detectUrl ([/tool fetch url=$chkUrl output=user as-value]->"data");
    } on-error={
@@ -176,9 +176,7 @@
      }
     }
    } else={:log warning "WMS: Internet connected"}
-   :foreach i in=$listLb do={
-    /interface enable [find where name=$i]
-   }
+   /ip route remove [find where comment=to-wms]
    /ip firewall nat enable [find where out-interface=$iFace]
   }
  } else={:log warning "WMS: WLAN disconnected !"}
