@@ -78,11 +78,10 @@
    /ip dhcp-client release [find interface=$iFace]
    :delay 10;
    :local gw [/ip dhcp-client get [find where interface=$iFace] gateway];
-   /ip firewall address-list add list=wifiid address="welcome2.wifi.id" timeout=15s
-   /ip firewall address-list add list=detectportal address="detectportal.firefox.com" timeout=15s
-   :delay 3;
    /ip route add gateway=$gw dst-address=9.9.9.9 comment=to-wms
    :foreach o in={"welcome2.wifi.id"; "detectportal.firefox.com"} do={
+    /ip firewall address-list add list=wifiid address=$o timeout=15s
+    :delay 3;
     :foreach p in=[/ip firewall address-list find comment=$o] do={
      :local addr [/ip firewall address-list get $p address];
      /ip route add gateway=$gw dst-address=$addr comment=to-wms
