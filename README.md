@@ -32,3 +32,8 @@ Wireless mac-address generator:
 /system script
 add name="MACGEN" dont-require-permission=yes source=([/tool fetch url="https://raw.githubusercontent.com/zainarbani/WMS/master/MACGEN.rsc" output=user as-value]->"data")
 ```
+
+We poor peeps would do literally anything
+```
+/interface wireless set [/interface find name=wlan1] radio-name="iPhone 13 Pro Max"
+```
