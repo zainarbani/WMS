@@ -2,9 +2,10 @@
 [![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
 
 ## Supported methods
- - WMS venue
- - WMS Lite venue
- - wifi.id normal/voucher/violet
+ - WMS venue/violet
+ - WMS Lite venue/violet
+ - WiSta venue/violet
+ - wifi.id reguler/voucher/violet
  - wifi.id smartbisnis
  - wifi.id kampus
 
