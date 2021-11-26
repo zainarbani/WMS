@@ -1,6 +1,6 @@
 #!rsc by RouterOS
 # RouterOS script: Telkom WMS AIO auto login
-# version: v0.6-2021-11-7-release
+# version: v0.7-2021-11-27-release
 # authors: zainarbani
 # manual: https://github.com/zainarbani/WMS#readme
 #
@@ -8,9 +8,10 @@
 # =========================
 
 # metode login & akun yang didukung:
-# WMS venue = venue
-# WMS Lite venue = venuelite
-# wifi.id normal/voucher/violet = voucher
+# WMS venue/violet = venue
+# WMS Lite venue/violet = venuelite
+# WiSta venue/violet = wista
+# wifi.id reguler/voucher/violet = voucher
 # wifi.id smartbisnis = smartbisnis
 # wifi.id kampus = kampus
 # default venue
@@ -64,6 +65,7 @@
  :local result;
  :local payloads;
  :local iUrl;
+ :local Uniq;
  :delay 30;
  :if ([/interface get [/interface find name=$iFace] running]) do={
   :if ([/ping 9.9.9.9 interval=1 count=1 interface=$iFace] = 0) do={
@@ -102,55 +104,64 @@
     } else={
      :do {
       :local Udata ([/tool fetch url=$portalUrl output=user as-value]->"data");
-      :if (($accType = "venue") || ($accType = "venuelite")) do={
-       :local Url [:pick $Udata [:len [:pick $Udata 0 [:find $Udata "auth/"]]] [:find $Udata "&landURL"]];
-       :local Uid [:pick $Udata [:len [:pick $Udata 0 [:find $Udata "wms"]]] [:find $Udata ".000"]];
-       :set $payloads [$urlEncoder ("username_=$user&autologin_time=86000&username=$user.ULd9@$Uid.000&password=$passwd")];
-       :if ($accType = "venuelite") do={
-        :local Uid [:pick $Udata [:len [:pick $Udata 0 [:find $Udata "wmslite"]]] [:find $Udata "');"]];
-        :set $payloads [$urlEncoder ("username_=$user&autologin_time=86000&username=$user.ULd9@$Uid&password=$passwd")];
+      :local kUser [:pick $user 0 [:find $user "@"]];
+      :if (($accType = "venue") || ($accType = "venuelite") || ($accType = "wista")) do={
+       :if ([:len $kUser] = [:find $user "@violet"]) do={
+        :set $Uniq $user;
+       } else={
+        :if ($accType = "venue") do={
+         :set $Uniq ("$user.ULd9@".[:pick $Udata [:len [:pick $Udata 0 [:find $Udata "wms"]]] [:find $Udata ".000"]]."000");
+        }
+        :if ($accType = "venuelite") do={
+         :set $Uniq ("$user.ULd9@".[:pick $Udata [:len [:pick $Udata 0 [:find $Udata "wmslite"]]] [:find $Udata "');"]]);
+        }
+        :if ($accType = "wista") do={
+         :set $Uniq ("$user@violet");
+        }
        }
+       :set $payloads [$urlEncoder ("username_=$user&username=$Uniq&password=$passwd")];
+       :local Url [:pick $Udata [:len [:pick $Udata 0 [:find $Udata "auth/"]]] [:find $Udata "&landURL"]];
        :set $iUrl [$urlEncoder ("http://welcome2.wifi.id/wms/$Url")];
       }
       :if (($accType = "voucher") || ($accType = "smartbisnis") || ($accType = "kampus")) do={
-       :local kUser [:pick $user 0 [:find $user "@"]];
        :local Uid [:pick $user [:len $kUser] [:len $user]];
-       :local Url [:pick $Udata [:len [:pick $Udata 0 [:find $Udata "check_login"]]] [:find $Udata "@wifi.id&load_wp='+load_time;"]];
-       :set $iUrl [$urlEncoder ("https://welcome2.wifi.id/authnew/login/$Url@wifi.id")];
        :if ($accType = "voucher") do={
-        :if ($Uid = "@violet") do={
-         :set $payloads [$urlEncoder ("username=$user&password=$passwd")];
+        :if ([:len $kUser] = [:find $user "@violet"]) do={
+         :set $Uniq $user;
         } else={
-         :set $payloads [$urlEncoder ("username=$user@spin2&password=$passwd")];
+         :set $Uniq ("$user@spin2");
         }
        }
        :if ($accType = "smartbisnis") do={
-        :set $payloads [$urlEncoder ("username=$user@com.smartbisnis&password=$passwd")];
+        :set $Uniq ("$user@com.smartbisnis");
        }
        :if ($accType = "kampus") do={
-        :set $payloads [$urlEncoder ("username=$user.vmgmt@wms.00000000.000&password=$passwd")];
+        :set $Uniq ("$user.vmgmt@wms.00000000.000");
         :if ($Uid = "@ut.ac.id") do={
-         :set $payloads [$urlEncoder ("username=$user@com.ut&password=$passwd")];
+         :set $Uniq ("$user@com.ut");
         }
         :if ($Uid = "@unej") do={
-         :set $payloads [$urlEncoder ("username=$kUser@com.unej&password=$passwd")];
+         :set $Uniq ("$kUser@com.unej");
         }
         :if ($Uid = "@umaha") do={
-         :set $payloads [$urlEncoder ("username=$kUser@com.umaha&password=$passwd")];
+         :set $Uniq ("$kUser@com.umaha");
         }
         :if ($Uid = "@trisakti") do={
-         :set $payloads [$urlEncoder ("username=$kUser@com.trisakti&password=$passwd")];
+         :set $Uniq ("$kUser@com.trisakti");
         }
         :if ($Uid = "@itdel") do={
-         :set $payloads [$urlEncoder ("username=$kUser@com.itdel&password=$passwd")];
+         :set $Uniq ("$kUser@com.itdel");
         }
         :if ($Uid = "@polije") do={
-         :set $payloads [$urlEncoder ("username=$kUser@com.polije&password=$passwd")];
+         :set $Uniq ("$kUser@com.polije");
         }
         :if ($Uid = "@unsiq") do={
-         :set $payloads [$urlEncoder ("username=$kUser@com.unsiq&password=$passwd")];
+         :set $Uniq ("$kUser@com.unsiq");
         }
        }
+       :set $payloads [$urlEncoder ("username=$Uniq&password=$passwd")];
+       :local Url [:pick $Udata [:len [:pick $Udata 0 [:find $Udata "check_login"]]] [:find $Udata "@wifi.id&load_wp='+load_time;"]];
+       :set $iUrl [$urlEncoder ("https://welcome2.wifi.id/authnew/login/$Url@wifi.id")];
       }
      } on-error={}
      :delay 5;
