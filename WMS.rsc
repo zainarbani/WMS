@@ -41,9 +41,14 @@
 
 # =========================
 
-:if ([:len [/system script job find where script=WMS]] > 1) do={
- :log warning "WMS: Script already running !";
- :exit ""
+:local jobS [/system script job find where script=WMS];
+:if ([:len $jobS] > 1) do={
+ :foreach i in=$jobS do={
+  :local lastS [/system script get [find where name=WMS] last-started]
+  :if ([/system script job get $i started] != $lastS) do={
+   /system script job remove $i
+  }
+ }
 }
 
 :while (true) do={
