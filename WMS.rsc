@@ -41,40 +41,49 @@
 
 # =========================
 
+:if ([:len [/system script job find where script=WMS]] > 1) do={
+ :log warning "WMS: Script already running !";
+ :exit ""
+}
 
-:global sendCallMeBot do={
- :do {
-  :local cUrl ("https://api.callmebot.com/whatsapp.php\?phone=$1&text=$3&apikey=$2");
-  /tool fetch http-header-field=("User-Agent: Safari/537.36") url=$cUrl output=none
- } on-error={}
-}
-:global urlEncoder do={
- :local urlEncoded;
- :for i from=0 to=([:len $1] - 1) do={
-  :local char [:pick $1 $i]
-  :if ($char = " ") do={:set $char "%20"}
-  :if ($char = "@") do={:set $char "%40"}
-  :set urlEncoded ($urlEncoded . $char)
- }
- :return $urlEncoded;
-}
 :while (true) do={
+ :delay 30;
+ :local Date [/system clock get date];
+ :local Time [/system clock get time];
+ :local Board [/system resource get board-name];
  :local chkUrl "http://detectportal.firefox.com/success.txt";
+ :local pingSrv "9.9.9.9";
+ :local uA "Safari/537.36";
+ :local successMsg "WMS: Logis success";
+ :local failedMsg "WMS: Logis failed";
+ :local successBot ("MikroTik $Board%0AWMS: Login success%0ATime: $Time%0ADate: $Date");
  :local detectUrl;
  :local portalUrl;
  :local result;
  :local payloads;
  :local iUrl;
  :local Uniq;
- :delay 30;
+ :local sendCallMeBot do={
+  :do {
+   :local cUrl ("https://api.callmebot.com/whatsapp.php\?phone=$1&text=$3&apikey=$2");
+   /tool fetch http-header-field=("User-Agent: $uA") url=$cUrl output=none
+  } on-error={}
+ }
+ :local urlEncoder do={
+  :local urlEncoded;
+  :for i from=0 to=([:len $1] - 1) do={
+   :local char [:pick $1 $i]
+   :if ($char = " ") do={:set $char "%20"}
+   :if ($char = "@") do={:set $char "%40"}
+   :set urlEncoded ($urlEncoded . $char)
+  }
+  :return $urlEncoded;
+ }
  :if ([/interface get [/interface find name=$iFace] running]) do={
-  :if ([/ping 9.9.9.9 interval=1 count=1 interface=$iFace] = 0) do={
+  :if ([/ping $pingSrv interval=1 count=1 interface=$iFace] = 0) do={
    :log warning "WMS: Internet disconnected !";
    :log warning "WMS: Starting auto login";
    :log warning ("WMS: Methods: $accType");
-   :local Date [/system clock get date];
-   :local Time [/system clock get time];
-   :local Board [/system resource get board-name];
    /ip firewall nat disable [find where out-interface=$iFace]
    /ip dns cache flush
    /ip dhcp-client release [find interface=$iFace]
@@ -92,10 +101,12 @@
    :do {
     :set $detectUrl ([/tool fetch url=$chkUrl output=user as-value]->"data");
    } on-error={
-    :execute file=detectUrl.txt script=("/tool fetch url=$chkUrl");
-    :delay 5;
-    :set $detectUrl [:file get detectUrl.txt contents];
-    :file remove detectUrl.txt;
+    :do {
+     :execute file=detectUrl.txt script=("/tool fetch url=$chkUrl");
+     :delay 5;
+     :set $detectUrl [:file get detectUrl.txt contents];
+     :file remove detectUrl.txt;
+    } on-error={}
    }
    :if ($detectUrl != "success\n") do={
     :set $portalUrl [$urlEncoder [:pick $detectUrl [:len [:pick $detectUrl 0 [:find $detectUrl "http://w"]]] [:find $detectUrl "\">"]]];
@@ -165,23 +176,23 @@
       }
      } on-error={}
      :delay 5;
-     :if ([/ping 9.9.9.9 interval=1 count=1 interface=$iFace] = 1) do={
-      :log warning "WMS: Login success";
+     :if ([/ping $pingSrv interval=1 count=1 interface=$iFace] = 1) do={
+      :log warning $successMsg;
       :if ($useCallMeBot) do={
-       $sendCallMeBot $cmbPhone $cmbApiKey [$urlEncoder ("MikroTik $Board%0AWMS: Login success%0ATime: $Time%0ADate: $Date")];
+       $sendCallMeBot $cmbPhone $cmbApiKey [$urlEncoder $successBot];
       }
      } else={
       :do {
-       :set $result ([/tool fetch http-method=post http-header-field=("Referer: $portalUrl, User-Agent: Safari/537.36") http-data=$payloads host="welcome2.wifi.id" url=$iUrl output=user as-value]->"data");
+       :set $result ([/tool fetch http-method=post http-header-field=("Referer: $portalUrl, User-Agent: $uA") http-data=$payloads host="welcome2.wifi.id" url=$iUrl output=user as-value]->"data");
        :delay 5;
-       :if ([/ping 9.9.9.9 interval=1 count=1 interface=$iFace] = 1) do={
-        :log warning "WMS: Login success";
+       :if ([/ping $pingSrv interval=1 count=1 interface=$iFace] = 1) do={
+        :log warning $successMsg;
         :if ($useCallMeBot) do={
-         $sendCallMeBot $cmbPhone $cmbApiKey [$urlEncoder ("MikroTik $Board%0AWMS: Login success%0ATime: $Time%0ADate: $Date")];
+         $sendCallMeBot $cmbPhone $cmbApiKey [$urlEncoder $successBot];
         }
-       } else={:log warning "WMS: Login failed !"}
+       } else={:log warning $failedMsg}
       } on-error={
-       :log warning "WMS: Login failed !";
+       :log warning $failedMsg;
       }
      }
     }
