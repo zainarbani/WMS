@@ -51,8 +51,8 @@
  }
 }
 
+:log warning "WMS:
 :while (true) do={
- :delay 30;
  :local Date [/system clock get date];
  :local Time [/system clock get time];
  :local Board [/system resource get board-name];
@@ -206,4 +206,5 @@
    /ip firewall nat enable [find where out-interface=$iFace]
   }
  } else={:log warning "WMS: WLAN disconnected !"}
+ :delay 30;
 }
