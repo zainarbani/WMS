@@ -59,8 +59,8 @@
  :local chkUrl "http://detectportal.firefox.com/success.txt";
  :local pingSrv "9.9.9.9";
  :local uA "Safari/537.36";
- :local successMsg "WMS: Logis success";
- :local failedMsg "WMS: Logis failed";
+ :local successMsg "WMS: Login success";
+ :local failedMsg "WMS: Login failed";
  :local successBot ("MikroTik $Board%0AWMS: Login success%0ATime: $Time%0ADate: $Date");
  :local detectUrl;
  :local portalUrl;
