@@ -51,7 +51,7 @@
  }
 }
 
-:log warning "WMS:
+
 :while (true) do={
  :local Date [/system clock get date];
  :local Time [/system clock get time];
