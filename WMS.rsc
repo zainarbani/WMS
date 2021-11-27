@@ -85,7 +85,7 @@
   :return $urlEncoded;
  }
  :if ([/interface get [/interface find name=$iFace] running]) do={
-  :if ([/ping $pingSrv interval=1 count=1 interface=$iFace] = 0) do={
+  :if ([/ping $pingSrv interval=1 count=4 interface=$iFace] = 0) do={
    :log warning "WMS: Internet disconnected !";
    :log warning "WMS: Starting auto login";
    :log warning ("WMS: Methods: $accType");
@@ -181,7 +181,7 @@
       }
      } on-error={}
      :delay 5;
-     :if ([/ping $pingSrv interval=1 count=1 interface=$iFace] = 1) do={
+     :if ([/ping $pingSrv interval=1 count=4 interface=$iFace] > 1) do={
       :log warning $successMsg;
       :if ($useCallMeBot) do={
        $sendCallMeBot $cmbPhone $cmbApiKey [$urlEncoder $successBot];
@@ -190,7 +190,7 @@
       :do {
        :set $result ([/tool fetch http-method=post http-header-field=("Referer: $portalUrl, User-Agent: $uA") http-data=$payloads host="welcome2.wifi.id" url=$iUrl output=user as-value]->"data");
        :delay 5;
-       :if ([/ping $pingSrv interval=1 count=1 interface=$iFace] = 1) do={
+       :if ([/ping $pingSrv interval=1 count=4 interface=$iFace] > 1) do={
         :log warning $successMsg;
         :if ($useCallMeBot) do={
          $sendCallMeBot $cmbPhone $cmbApiKey [$urlEncoder $successBot];
