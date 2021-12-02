@@ -25,7 +25,7 @@ Create scheduler:
 /system scheduler
 add name=WMS on-event="/system script run WMS" policy=\
     ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon \
-    start-time=startup
+    start-time=startup interval=20s
 ```
 
 Wireless mac-address generator:
