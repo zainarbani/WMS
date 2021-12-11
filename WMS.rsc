@@ -93,6 +93,7 @@
    :foreach p in=[/ip firewall address-list find comment=$o] do={
     :local addr [/ip firewall address-list get $p address];
     /ip route add gateway=("$gw%$iFace") dst-address=$addr comment=to-wms
+    /ip dns static add name=$o address=$addr type=A comment=to-wms
    }
   }
   :do {
@@ -193,6 +194,7 @@
    }
   } else={:log warning "WMS: Internet connected"}
   /ip route remove [find where comment=to-wms]
+  /ip dns static remove [find where comment=to-wms]
   /ip firewall nat enable [find where out-interface=$iFace]
  }
 } else={:log warning "WMS: WLAN disconnected !"}
