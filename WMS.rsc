@@ -87,8 +87,8 @@
   /ip dhcp-client release [find interface=$iFace]
   :delay 5;
   :local gw [/ip dhcp-client get [find where interface=$iFace] gateway];
-  /ip route add gateway=("$gw%$iFace") dst-address=9.9.9.9 comment=to-wms
-  :foreach o in={"welcome2.wifi.id"; "detectportal.firefox.com"} do={
+  /ip route add gateway=("$gw%$iFace") dst-address=$pingSrv comment=to-wms
+  :foreach o in={"detectportal.firefox.com"; "welcome2.wifi.id"} do={
    /ip firewall address-list add list=wifiid address=$o timeout=15s
    :delay 2;
    :foreach p in=[/ip firewall address-list find comment=$o] do={
@@ -99,6 +99,7 @@
   }
   :do {
    :set $detectUrl ([/tool fetch url=$chkUrl output=user as-value]->"data");
+   :delay 1;
   } on-error={
    :do {
     :execute file=detectUrl.txt script=("/tool fetch url=$chkUrl");
@@ -183,8 +184,8 @@
     } else={
      :do {
       :set $result ([/tool fetch http-method=post http-header-field=("Referer: $portalUrl, User-Agent: $uA") http-data=$payloads host="welcome2.wifi.id" url=$iUrl output=user as-value]->"data");
-      :delay 2;
      } on-error={}
+     :delay 1;
      :if ([/ping $pingSrv interval=1 count=2 interface=$iFace] > 1) do={
       :log warning $successMsg;
       :if ($useCallMeBot) do={
