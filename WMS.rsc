@@ -49,7 +49,7 @@
 :local Time [/system clock get time];
 :local Board [/system resource get board-name];
 :local chkUrl "http://detectportal.firefox.com/success.txt";
-:local pingSrv "9.9.9.9";
+:local pingSrv "8.8.8.8";
 :local uA "Safari/537.36";
 :local successMsg "WMS: Login success";
 :local failedMsg "WMS: Login failed";
