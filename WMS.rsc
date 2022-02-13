@@ -1,6 +1,6 @@
 #!rsc by RouterOS
 # RouterOS script: Telkom WMS AIO auto login
-# version: v0.7-2021-11-27-release
+# version: v0.8-2022-2-14-release
 # authors: zainarbani
 # manual: https://github.com/zainarbani/WMS#readme
 #
@@ -30,13 +30,16 @@
 
 # CallMeBot WhatsApp API
 # https://www.callmebot.com/blog/free-api-whatsapp-messages/
-# use CallMeBot: true = yes | flase = no, default false
+# use CallMeBot: true = yes | flase = no
+# default false
 :local useCallMeBot false;
 
 # CallMeBot API key
+# ex: 123456
 :local cmbApiKey "";
 
 # CallMeBot phone number
+# ex: +6281234567890
 :local cmbPhone "";
 
 # =========================
@@ -48,18 +51,19 @@
 :local Date [/system clock get date];
 :local Time [/system clock get time];
 :local Board [/system resource get board-name];
-:local chkUrl "http://detectportal.firefox.com/success.txt";
+:local chkUrl "detectportal.firefox.com";
+:local hostSrv "welcome2.wifi.id";
 :local pingSrv "8.8.8.8";
 :local uA "Safari/537.36";
+:local startMsg "WMS: Starting auto login";
+:local methodMsg ("WMS: Methods: $accType");
 :local successMsg "WMS: Login success";
 :local failedMsg "WMS: Login failed";
-:local successBot ("MikroTik $Board%0AWMS: Login success%0ATime: $Time%0ADate: $Date");
-:local detectUrl;
-:local portalUrl;
-:local result;
-:local payloads;
-:local iUrl;
-:local Uniq;
+:local netOk "WMS: Internet connected !";
+:local netNok "WMS: Internet disconnected !";
+:local wlNok "WMS: WLAN disconnected !";
+:local porNok "WMS: Failed to detect login portal !";
+:local successBot ("MikroTik $Board%0A$successMsg%0ATime: $Time%0ADate: $Date");
 :local sendCallMeBot do={
  :do {
   :local cUrl ("https://api.callmebot.com/whatsapp.php\?phone=$1&text=$3&apikey=$2");
@@ -78,9 +82,9 @@
 }
 :if ([/interface get [/interface find name=$iFace] running]) do={
  :if ([/ping $pingSrv interval=1 count=2 interface=$iFace] = 0) do={
-  :log warning "WMS: Internet disconnected !";
-  :log warning "WMS: Starting auto login";
-  :log warning ("WMS: Methods: $accType");
+  :log warning $netNok;
+  :log warning $startMsg;
+  :log warning $methodMsg;
   /ip firewall nat disable [find where out-interface=$iFace]
   /ip dns cache flush
   /ip dns static remove [find where comment=to-wms]
@@ -88,7 +92,7 @@
   :delay 5;
   :local gw [/ip dhcp-client get [find where interface=$iFace] gateway];
   /ip route add gateway=("$gw%$iFace") dst-address=$pingSrv comment=to-wms
-  :foreach o in={"detectportal.firefox.com"; "welcome2.wifi.id"} do={
+  :foreach o in={$chkUrl; $hostSrv} do={
    /ip firewall address-list add list=wifiid address=$o timeout=15s
    :delay 2;
    :foreach p in=[/ip firewall address-list find comment=$o] do={
@@ -98,11 +102,11 @@
    }
   }
   :do {
-   :set $detectUrl ([/tool fetch url=$chkUrl output=user as-value]->"data");
+   :set $detectUrl ([/tool fetch url=("http://$chkUrl") output=user as-value]->"data");
    :delay 1;
   } on-error={
    :do {
-    :execute file=detectUrl.txt script=("/tool fetch url=$chkUrl");
+    :execute file=detectUrl.txt script=("/tool fetch url=http://$chkUrl");
     :delay 1;
     :set $detectUrl [:file get detectUrl.txt contents];
     :file remove detectUrl.txt;
@@ -111,7 +115,7 @@
   :if ($detectUrl != "success\n") do={
    :set $portalUrl [$urlEncoder [:pick $detectUrl [:len [:pick $detectUrl 0 [:find $detectUrl "http://w"]]] [:find $detectUrl "\">"]]];
    :if ([:len $portalUrl] < 20) do={
-    :log warning "WMS: Failed to detect login portal !";
+    :log warning $porNok;
    } else={
     :do {
      :local Udata ([/tool fetch url=$portalUrl output=user as-value]->"data");
@@ -120,11 +124,21 @@
       :if ([:len $kUser] = [:find $user "@violet"]) do={
        :set $Uniq $user;
       } else={
-       :if ($accType = "venue") do={
-        :set $Uniq ("$user.ULd9@".[:pick $Udata [:len [:pick $Udata 0 [:find $Udata "wms"]]] [:find $Udata ".000"]]."000");
-       }
-       :if ($accType = "venuelite") do={
-        :set $Uniq ("$user.ULd9@".[:pick $Udata [:len [:pick $Udata 0 [:find $Udata "wmslite"]]] [:find $Udata "');"]]);
+       :if (($accType = "venue") || ($accType = "venuelite")) do={
+        :if ($accType = "venuelite") do={
+         :set $Ven "wmslite";
+        }
+        :if ($accType = "venue") do={
+         :set $Ven "wms";
+        }
+        :set $vID [:pick $Udata [:len [:pick $Udata 0 [:find $Udata $Ven]]] [:find $Udata "');\n"]];
+        :if ([:len $vID] = 0) do={
+         :set $vID [:pick $Udata [:len [:pick $Udata 0 [:find $Udata $Ven]]] [:find $Udata ".000');\n"]];
+        }
+        :set $Uniq ("$user.ULd9@$vID");
+        :if ([:find $Udata ".000');\n"]) do={
+         :set $Uniq ("$Uniq.000");
+        }
        }
        :if ($accType = "wista") do={
         :set $Uniq ("$user@violet");
@@ -132,7 +146,7 @@
       }
       :set $payloads [$urlEncoder ("username_=$user&username=$Uniq&password=$passwd")];
       :local Url [:pick $Udata [:len [:pick $Udata 0 [:find $Udata "auth/"]]] [:find $Udata "&landURL"]];
-      :set $iUrl [$urlEncoder ("http://welcome2.wifi.id/wms/$Url")];
+      :set $iUrl [$urlEncoder ("http://$hostSrv/wms/$Url")];
      }
      :if (($accType = "voucher") || ($accType = "smartbisnis") || ($accType = "kampus")) do={
       :local Uid [:pick $user [:len $kUser] [:len $user]];
@@ -172,7 +186,7 @@
       }
       :set $payloads [$urlEncoder ("username=$Uniq&password=$passwd")];
       :local Url [:pick $Udata [:len [:pick $Udata 0 [:find $Udata "check_login"]]] [:find $Udata "@wifi.id&load_wp='+load_time;"]];
-      :set $iUrl [$urlEncoder ("https://welcome2.wifi.id/authnew/login/$Url@wifi.id")];
+      :set $iUrl [$urlEncoder ("https://$hostSrv/authnew/login/$Url@wifi.id")];
      }
     } on-error={}
     :delay 1;
@@ -183,7 +197,7 @@
      }
     } else={
      :do {
-      :set $result ([/tool fetch http-method=post http-header-field=("Referer: $portalUrl, User-Agent: $uA") http-data=$payloads host="welcome2.wifi.id" url=$iUrl output=user as-value]->"data");
+      :set $result ([/tool fetch http-method=post http-header-field=("Referer: $portalUrl, User-Agent: $uA") http-data=$payloads host=$hostSrv url=$iUrl output=user as-value]->"data");
      } on-error={}
      :delay 1;
      :if ([/ping $pingSrv interval=1 count=2 interface=$iFace] > 1) do={
@@ -194,9 +208,9 @@
      } else={:log warning $failedMsg}
     }
    }
-  } else={:log warning "WMS: Internet connected"}
+  } else={:log warning $netOk}
   /ip route remove [find where comment=to-wms]
   /ip dns static remove [find where comment=to-wms]
   /ip firewall nat enable [find where out-interface=$iFace]
  }
-} else={:log warning "WMS: WLAN disconnected !"}
+} else={:log warning $wlNok}
