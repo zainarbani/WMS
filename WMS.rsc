@@ -28,19 +28,23 @@
 # default wlan1
 :local iFace "wlan1";
 
-# CallMeBot WhatsApp API
-# https://www.callmebot.com/blog/free-api-whatsapp-messages/
-# use CallMeBot: true = yes | flase = no
+# Nexmo WhatsApp API
+# https://dashboard.nexmo.com/messages/sandbox
+# use Bot: true = yes | flase = no
 # default false
-:local useCallMeBot false;
+:local useBot false;
 
-# CallMeBot API key
-# ex: 123456
-:local cmbApiKey "";
+# Nexmo API key
+:local apiKey "";
 
-# CallMeBot phone number
-# ex: +6281234567890
-:local cmbPhone "";
+# Nexmo API secret
+:local apiSec "";
+
+# Nexmo Bot Number
+:local botNum "";
+
+# Nexmo User Number
+:local userNum "";
 
 # =========================
 
@@ -48,9 +52,14 @@
 :if ([:len [/system script job find where script=WMS]] > 1) do={
  :exit ""
 }
-:local Date [/system clock get date];
-:local Time [/system clock get time];
 :local Board [/system resource get board-name];
+:local cpuRes [/system resource get cpu-load];
+:local Ident [/system identity get name];
+:local wlSid [/interface wireless get [find where name=wlan1] ssid];
+:local wlSignal [/interface wireless registration-table get [find where interface=$iFace] signal-strength-ch0];
+:local wlCcq [/interface wireless registration-table get [find where interface=$iFace] tx-ccq];
+:local wlTx [/interface wireless registration-table get [find where interface=$iFace] tx-rate];
+:local wlRx [/interface wireless registration-table get [find where interface=$iFace] rx-rate];
 :local chkUrl "detectportal.firefox.com";
 :local hostSrv "welcome2.wifi.id";
 :local pingSrv "8.8.8.8";
@@ -63,11 +72,14 @@
 :local netNok "WMS: Internet disconnected !";
 :local wlNok "WMS: WLAN disconnected !";
 :local porNok "WMS: Failed to detect login portal !";
-:local successBot ("MikroTik $Board%0A$successMsg%0ATime: $Time%0ADate: $Date");
-:local sendCallMeBot do={
+:local successBot ("Auto Login Success\\n\\nRouter: $Board\\nIdentity: $Ident\\nCPU Usage: $cpuRes %\\n\\nWLAN Info:\\nSSID: $wlSid\\nStrength: $wlSignal dBm\\nCCQ: $wlCcq %\\nTX: $wlTx\\nRX: $wlRx");
+:local sendBot do={
  :do {
-  :local cUrl ("https://api.callmebot.com/whatsapp.php\?phone=$1&text=$3&apikey=$2");
-  /tool fetch http-header-field=("User-Agent: $uA") url=$cUrl output=none
+  :local cUrl "https://messages-sandbox.nexmo.com/v1/messages";
+  :local logoUrl "https://raw.githubusercontent.com/zainarbani/WMS/main/logo.png";
+  :local bHead "{content-type: application/json}";
+  :local bDat ("{\"from\": \"$3\", \"to\": \"$4\", \"message_type\": \"image\", \"image\": {\"url\": \"$logoUrl\", \"caption\": \"$5\"}, \"channel\": \"whatsapp\"}");
+  /tool fetch http-method=post url=$cUrl http-header-field=$bHead http-data=$bDat user=$1 password=$2 output=none
  } on-error={}
 }
 :local urlEncoder do={
@@ -192,8 +204,8 @@
     :delay 1;
     :if ([/ping $pingSrv interval=1 count=2 interface=$iFace] > 1) do={
      :log warning $successMsg;
-     :if ($useCallMeBot) do={
-      $sendCallMeBot $cmbPhone $cmbApiKey [$urlEncoder $successBot];
+     :if ($useBot) do={
+      $sendBot $apiKey $apiSec $botNum $userNum $successBot;
      }
     } else={
      :do {
@@ -202,8 +214,8 @@
      :delay 1;
      :if ([/ping $pingSrv interval=1 count=2 interface=$iFace] > 1) do={
       :log warning $successMsg;
-      :if ($useCallMeBot) do={
-       $sendCallMeBot $cmbPhone $cmbApiKey [$urlEncoder $successBot];
+      :if ($useBot) do={
+       $sendBot $apiKey $apiSec $botNum $userNum $successBot;
       }
      } else={:log warning $failedMsg}
     }
