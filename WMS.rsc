@@ -49,8 +49,11 @@
 # =========================
 
 
-:if ([:len [/system script job find where script=WMS]] > 1) do={
- :exit ""
+
+:foreach o in={"WMS"; "WMS2",} do={
+ :if ([:len [/system script job find where script=$o]] > 1) do={
+  :exit ""
+ }
 }
 :local Board [/system resource get board-name];
 :local cpuRes [/system resource get cpu-load];
