@@ -50,7 +50,7 @@
 
 
 
-:foreach o in={"WMS"; "WMS2",} do={
+:foreach o in={"WMS"; "WMS2"} do={
  :if ([:len [/system script job find where script=$o]] > 1) do={
   :exit ""
  }
