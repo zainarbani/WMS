@@ -102,6 +102,7 @@
   /ip firewall nat disable [find where out-interface=$iFace]
   /ip dns cache flush
   /ip dns static remove [find where comment=to-wms]
+  /ip dhcp-client set [find interface=$iFace] use-peer-dns=yes
   /ip dhcp-client release [find interface=$iFace]
   :delay 5;
   :local gw [/ip dhcp-client get [find where interface=$iFace] gateway];
