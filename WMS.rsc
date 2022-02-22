@@ -79,9 +79,8 @@
 :local sendBot do={
  :do {
   :local cUrl "https://messages-sandbox.nexmo.com/v1/messages";
-  :local logoUrl "https://raw.githubusercontent.com/zainarbani/WMS/main/logo.png";
   :local bHead "{content-type: application/json}";
-  :local bDat ("{\"from\": \"$3\", \"to\": \"$4\", \"message_type\": \"image\", \"image\": {\"url\": \"$logoUrl\", \"caption\": \"$5\"}, \"channel\": \"whatsapp\"}");
+  :local bDat ("{\"from\": \"$3\", \"to\": \"$4\", \"message_type\": \"text\", \"text\": \"$5\", \"channel\": \"whatsapp\"}");
   /tool fetch http-method=post url=$cUrl http-header-field=$bHead http-data=$bDat user=$1 password=$2 output=none
  } on-error={}
 }
