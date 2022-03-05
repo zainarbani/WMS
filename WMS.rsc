@@ -33,10 +33,11 @@
 
 
 
-:foreach o in={"WMS"; "WMS2"} do={
- :if ([:len [/system script job find where script=$o]] > 1) do={
-  :exit ""
- }
+:global WMSRUNNING;
+:if ($WMSRUNNING) do={
+ :exit ""
+} else={
+ :set $WMSRUNNING true;
 }
 :local chkUrl "detectportal.firefox.com";
 :local hostSrv "welcome2.wifi.id";
@@ -187,5 +188,6 @@
   /ip route remove [find where comment=to-wms]
   /ip dns static remove [find where comment=to-wms]
   /ip firewall nat enable [find where out-interface=$iFace]
+  :set $WMSRUNNING false;
  }
 } else={:log warning $wlNok}
