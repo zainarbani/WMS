@@ -188,6 +188,6 @@
   /ip route remove [find where comment=to-wms]
   /ip dns static remove [find where comment=to-wms]
   /ip firewall nat enable [find where out-interface=$iFace]
-  :set $WMSRUNNING false;
  }
 } else={:log warning $wlNok}
+:set $WMSRUNNING false;
