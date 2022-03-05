@@ -28,23 +28,6 @@
 # default wlan1
 :local iFace "wlan1";
 
-# Nexmo WhatsApp API
-# https://dashboard.nexmo.com/messages/sandbox
-# use Bot: true = yes | flase = no
-# default false
-:local useBot false;
-
-# Nexmo API key
-:local apiKey "";
-
-# Nexmo API secret
-:local apiSec "";
-
-# Nexmo Bot Number
-:local botNum "";
-
-# Nexmo User Number
-:local userNum "";
 
 # =========================
 
@@ -55,14 +38,6 @@
   :exit ""
  }
 }
-:local Board [/system resource get board-name];
-:local cpuRes [/system resource get cpu-load];
-:local Ident [/system identity get name];
-:local wlSid [/interface wireless get [find where name=wlan1] ssid];
-:local wlSignal [/interface wireless registration-table get [find where interface=$iFace] signal-strength-ch0];
-:local wlCcq [/interface wireless registration-table get [find where interface=$iFace] tx-ccq];
-:local wlTx [/interface wireless registration-table get [find where interface=$iFace] tx-rate];
-:local wlRx [/interface wireless registration-table get [find where interface=$iFace] rx-rate];
 :local chkUrl "detectportal.firefox.com";
 :local hostSrv "welcome2.wifi.id";
 :local pingSrv "8.8.8.8";
@@ -75,15 +50,6 @@
 :local netNok "WMS: Internet disconnected !";
 :local wlNok "WMS: WLAN disconnected !";
 :local porNok "WMS: Failed to detect login portal !";
-:local successBot ("Auto Login Success\\n\\nRouter: $Board\\nIdentity: $Ident\\nCPU Usage: $cpuRes %\\n\\nWLAN Info:\\nSSID: $wlSid\\nStrength: $wlSignal dBm\\nCCQ: $wlCcq %\\nTX: $wlTx\\nRX: $wlRx");
-:local sendBot do={
- :do {
-  :local cUrl "https://messages-sandbox.nexmo.com/v1/messages";
-  :local bHead "{content-type: application/json}";
-  :local bDat ("{\"from\": \"$3\", \"to\": \"$4\", \"message_type\": \"text\", \"text\": \"$5\", \"channel\": \"whatsapp\"}");
-  /tool fetch http-method=post url=$cUrl http-header-field=$bHead http-data=$bDat user=$1 password=$2 output=none
- } on-error={}
-}
 :local urlEncoder do={
  :local urlEncoded;
  :for i from=0 to=([:len $1] - 1) do={
@@ -207,9 +173,6 @@
     :delay 1;
     :if ([/ping $pingSrv interval=1 count=2 interface=$iFace] > 1) do={
      :log warning $successMsg;
-     :if ($useBot) do={
-      $sendBot $apiKey $apiSec $botNum $userNum $successBot;
-     }
     } else={
      :do {
       :set $result ([/tool fetch http-method=post http-header-field=("Referer: $portalUrl, User-Agent: $uA") http-data=$payloads host=$hostSrv url=$iUrl output=user as-value]->"data");
@@ -217,9 +180,6 @@
      :delay 1;
      :if ([/ping $pingSrv interval=1 count=2 interface=$iFace] > 1) do={
       :log warning $successMsg;
-      :if ($useBot) do={
-       $sendBot $apiKey $apiSec $botNum $userNum $successBot;
-      }
      } else={:log warning $failedMsg}
     }
    }
