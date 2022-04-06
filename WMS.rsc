@@ -41,7 +41,7 @@
 }
 :local chkUrl "detectportal.firefox.com";
 :local hostSrv "welcome2.wifi.id";
-:local pingSrv "8.8.8.8";
+:local pingSrv "1.0.0.1";
 :local uA "Safari/537.36";
 :local startMsg "WMS: Starting auto login";
 :local methodMsg ("WMS: Methods: $accType");
