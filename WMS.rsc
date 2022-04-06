@@ -144,26 +144,15 @@
       }
       :if ($accType = "kampus") do={
        :set $Uniq ("$user.vmgmt@wms.00000000.000");
-       :if ($Uid = "@ut.ac.id") do={
-        :set $Uniq ("$user@com.ut");
+       :local kampusid {{"@ut.ac.id";"$user@com.ut"};{"@unej";"$kUser@com.unej"};\
+        {"@umaha";"$kUser@com.umaha"};{"@trisakti";"$kUser@com.trisakti"};\
+        {"@itdel";"$kUser@com.itdel"};{"@polije";"$kUser@com.polije"};\
+        {"@unsiq";"$kUser@com.unsiq"}\
        }
-       :if ($Uid = "@unej") do={
-        :set $Uniq ("$kUser@com.unej");
-       }
-       :if ($Uid = "@umaha") do={
-        :set $Uniq ("$kUser@com.umaha");
-       }
-       :if ($Uid = "@trisakti") do={
-        :set $Uniq ("$kUser@com.trisakti");
-       }
-       :if ($Uid = "@itdel") do={
-        :set $Uniq ("$kUser@com.itdel");
-       }
-       :if ($Uid = "@polije") do={
-        :set $Uniq ("$kUser@com.polije");
-       }
-       :if ($Uid = "@unsiq") do={
-        :set $Uniq ("$kUser@com.unsiq");
+       :foreach x in=$kampusid do={
+        :if ($Uid = ($x->0)) do={
+         :set $Uniq ($x->1);
+        }
        }
       }
       :set $payloads [$urlEncoder ("username=$Uniq&password=$passwd")];
